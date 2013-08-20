@@ -4,6 +4,31 @@
  *
  * Copyright (c) 2013 xiehui
  * Licensed under the MIT license.
+ *
+ *  + lib
+ *  |   |
+ *  |   + js
+ *  |   |
+ *  |   + css
+ *  |
+ *  + src
+ *  |    |
+ *  |    + js
+ *  |    |
+ *  |    + css
+ *  |    |
+ *  |    - html
+ *  |
+ *  + dest
+ *       |
+ *       + lib
+ *       |
+ *       + js
+ *       |
+ *       + css
+ *       |
+ *       - html
+ *
  */
 
 'use strict';
