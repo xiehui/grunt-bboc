@@ -47,9 +47,10 @@ exports.bboc = {
     },
     js_processor: function (test) {
         test.expect(1);
-        var jsprocessor = require('../tasks/lib/jsprocessor')({
-            'test/fixtures/project/lib/js': 'js/lib'
-        }, 'test/fixtures/project/dest', grunt);
+        var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, [{
+            src: 'test/fixtures/project/lib/js',
+            dest: 'js/lib'
+        }], 'test/fixtures/project/dest');
         jsprocessor.process();
         test.done();
     }

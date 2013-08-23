@@ -6,26 +6,60 @@
  */
 var path = require('path');
 
-module.exports = function (dirs, dest, grunt) {
+module.exports = function (grunt, dirs, dest) {
     var copies = [];
     var concat = {};
     var uglify = {};
+    var tree = {};
     var exports = {};
+
+    var routeNode = function (rootNode, paths) {
+        var path;
+        if (paths && paths.length > 0) {
+            path = paths.shift();
+            if (!rootNode.hasOwnProperty(path)) {
+                rootNode.path = {};
+            }
+            routeNode(rootNode.path, paths);
+        }
+        return rootNode;
+    };
+
+    var addLeaf = function (fullpath, destfile) {
+        var paths = fullpath.split('/');
+        var filename = paths.pop();
+        var node = routeNode(tree, paths);
+        if (node.hasOwnProperty(destfile)) {
+            node.destfile.push(filename);
+        } else {
+            node.destfile = [filename];
+        }
+    };
 
     var parse = function () {
         var presdirs = [];
-        var index = 0, srcdir;
-        for (srcdir in dirs) {
-            grunt.file.recurse(srcdir, function (abspath, rootdir, subdir, filename) {
+        var index = 0;
+        dirs.forEach(function (dir) {
+            grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
                 if (path.extname(filename) == '.js') {
                     if (presdirs.indexOf(subdir) === -1) {
-                        presdirs.push(subdir);
+                        presdirs.push(dir.src);
                         var jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
-                        var destjs = [dest, dirs[srcdir], subdir + '.js'].join('/');
-                        var destminjs = [dest, dirs[srcdir], subdir + '.min.js'].join('/');
+                        var destjs, destminjs;
+                        destjs = path.join(dest, dir.dest || '.', subdir + '.js');
+                        destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
+//                        if (dir.dest) {
+//                            destjs = [dest, dir.dest, subdir + '.js'].join('/');
+//                            destminjs = [dest, dir.dest, subdir + '.min.js'].join('/');
+//                        } else {
+//                            destjs = [dest, subdir + '.js'].join('/');
+//                            destminjs = [dest, subdir + '.min.js'].join('/');
+//                        }
                         concat[jobname + '_' + index] = {
-                            src: [rootdir, subdir, '*.js'].join('/')
+//                            src: [rootdir, subdir, '*.js'].join('/')
+                            src: path.join(rootdir, subdir, '*.js')
                         };
+
                         concat[jobname + '_' + index].dest = destjs;
                         uglify[jobname + '_' + index] = {
                             files: {}
@@ -37,7 +71,7 @@ module.exports = function (dirs, dest, grunt) {
                     copies.push(abspath);
                 }
             });
-        }
+        });
     };
 
     exports.process = function () {
@@ -46,35 +80,3 @@ module.exports = function (dirs, dest, grunt) {
 
     return exports;
 };
-
-//JsProcessor.prototype.process = function () {
-//    this.parse();
-//};
-
-//JsProcessor.prototype.parse = function () {
-//    var presdirs = [];
-//    var index = 0;
-//    this.srcdir.forEach(function (dir) {
-//        grunt.file.recurse(dir, function (abspath, rootdir, subdir, filename) {
-//            if (path.extname(filename) == '.js') {
-//                if (presdirs.indexOf(subdir) === -1) {
-//                    presdirs.push(subdir);
-//                    var destname = subdir.substr(subdir.lastIndexOf('/'));
-//                    var dest = [this.dest, subdir, destname + '.js'].join('/');
-//                    var destmin = [this.dest, subdir, destname + '.min.js'].join('/');
-//                    this.concat[destname + '_' + index] = {
-//                        src: [rootdir, subdir, '*.js'].join('/')
-//                    };
-//                    this.concat[destname + '_' + index].dest = dest;
-//                    this.uglify[destname + '_' + index] = {
-//                        files: {}
-//                    };
-//                    this.uglify[destname + '_' + index].files[destmin] = [dest];
-//                    index++;
-//                }
-//            } else {
-//                this.copies.push(abspath);
-//            }
-//        });
-//    });
-//};

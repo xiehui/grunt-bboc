@@ -33,43 +33,55 @@
 
 'use strict';
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
-  // Please see the Grunt documentation for more information regarding task
-  // creation: http://gruntjs.com/creating-tasks
+    // Please see the Grunt documentation for more information regarding task
+    // creation: http://gruntjs.com/creating-tasks
 
-  grunt.registerMultiTask('bboc', 'building based on covention', function() {
-    // Merge task-specific and/or target-specific options with these defaults.
-    var options = this.options({
-      punctuation: '.',
-      separator: ', '
-    });
+    grunt.registerTask('bboc', 'building based on covention', function () {
+        // Merge task-specific and/or target-specific options with these defaults.
+        var options = {
+            js: {dir: [
+                {
+                    src: 'lib/js'
+                },
+                {
+                    src: 'src/js',
+                    dest: 'js'
+                }
+            ]
 
-    // Iterate over all specified file groups.
-    this.files.forEach(function(f) {
-      // Concat specified files.
-      var src = f.src.filter(function(filepath) {
-        // Warn on and remove invalid source files (if nonull was set).
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
-          return false;
-        } else {
-          return true;
-        }
-      }).map(function(filepath) {
-        // Read file source.
-        return grunt.file.read(filepath);
-      }).join(grunt.util.normalizelf(options.separator));
+            },
+            dest: 'dest'
+        };
 
-      // Handle options.
-      src += options.punctuation;
+// Iterate over all specified file groups.
+        this.files.forEach(function (f) {
+            // Concat specified files.
+            var src = f.src.filter(function (filepath) {
+                // Warn on and remove invalid source files (if nonull was set).
+                if (!grunt.file.exists(filepath)) {
+                    grunt.log.warn('Source file "' + filepath + '" not found.');
+                    return false;
+                } else {
+                    return true;
+                }
+            }).map(function (filepath) {
+                    // Read file source.
+                    return grunt.file.read(filepath);
+                }).join(grunt.util.normalizelf(options.separator));
 
-      // Write the destination file.
-      grunt.file.write(f.dest, src);
+            // Handle options.
+            src += options.punctuation;
 
-      // Print a success message.
-      grunt.log.writeln('File "' + f.dest + '" created.');
-    });
-  });
+            // Write the destination file.
+            grunt.file.write(f.dest, src);
 
-};
+            // Print a success message.
+            grunt.log.writeln('File "' + f.dest + '" created.');
+        });
+    })
+    ;
+
+}
+;
