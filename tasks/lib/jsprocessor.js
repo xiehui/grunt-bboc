@@ -42,12 +42,11 @@ module.exports = function (grunt, dirs, dest) {
         dirs.forEach(function (dir) {
             grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
                 if (path.extname(filename) == '.js') {
+                    var destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
                     if (presdirs.indexOf(subdir) === -1) {
                         presdirs.push(dir.src);
                         var jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
-                        var destjs, destminjs;
-                        destjs = path.join(dest, dir.dest || '.', subdir + '.js');
-                        destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
+                        var destjs = path.join(dest, dir.dest || '.', subdir + '.js');
 //                        if (dir.dest) {
 //                            destjs = [dest, dir.dest, subdir + '.js'].join('/');
 //                            destminjs = [dest, dir.dest, subdir + '.min.js'].join('/');
@@ -67,6 +66,7 @@ module.exports = function (grunt, dirs, dest) {
                         uglify[jobname + '_' + index].files[destminjs] = [destjs];
                         index++;
                     }
+                    addLeaf(abspath, destminjs);
                 } else {
                     copies.push(abspath);
                 }
