@@ -5,35 +5,22 @@
  * To change this template use File | Settings | File Templates.
  */
 var path = require('path');
+var fs = require('fs');
 
 module.exports = function (grunt, dirs, dest) {
     var copies = [];
     var concat = {};
     var uglify = {};
-    var tree = {};
+    var mapping = require('./srcdestmapper')();
     var exports = {};
 
-    var routeNode = function (rootNode, paths) {
-        var path;
-        if (paths && paths.length > 0) {
-            path = paths.shift();
-            if (!rootNode.hasOwnProperty(path)) {
-                rootNode.path = {};
-            }
-            routeNode(rootNode.path, paths);
+    var hasSubPath = function (dir) {
+        var filenames = fs.readdirSync(dir);
+        var i;
+        for (i = 0; i < filenames.length; i++) {
+            if (fs.statSync(path.join(dir, filenames[i])).isDirectory()) return true;
         }
-        return rootNode;
-    };
-
-    var addLeaf = function (fullpath, destfile) {
-        var paths = fullpath.split('/');
-        var filename = paths.pop();
-        var node = routeNode(tree, paths);
-        if (node.hasOwnProperty(destfile)) {
-            node.destfile.push(filename);
-        } else {
-            node.destfile = [filename];
-        }
+        return false;
     };
 
     var parse = function () {
@@ -41,12 +28,19 @@ module.exports = function (grunt, dirs, dest) {
         var index = 0;
         dirs.forEach(function (dir) {
             grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
+                var jobname, destjs, destminjs;
                 if (path.extname(filename) == '.js') {
-                    var destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
+
                     if (presdirs.indexOf(subdir) === -1) {
-                        presdirs.push(dir.src);
-                        var jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
-                        var destjs = path.join(dest, dir.dest || '.', subdir + '.js');
+                        if (hasSubPath([rootdir, subdir].join('/'))) {
+                            jobname = path.basename('.js');
+                            destjs = abspath;
+                            destminjs = path.join(dest, dir.dest || '.', subdir, jobname + '.min.js');
+                        } else {
+                            presdirs.push(subdir);
+                            jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
+                            destjs = path.join(dest, dir.dest || '.', subdir + '.js');
+                            destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
 //                        if (dir.dest) {
 //                            destjs = [dest, dir.dest, subdir + '.js'].join('/');
 //                            destminjs = [dest, dir.dest, subdir + '.min.js'].join('/');
@@ -54,19 +48,22 @@ module.exports = function (grunt, dirs, dest) {
 //                            destjs = [dest, subdir + '.js'].join('/');
 //                            destminjs = [dest, subdir + '.min.js'].join('/');
 //                        }
-                        concat[jobname + '_' + index] = {
+                            concat[jobname + '_' + index] = {
 //                            src: [rootdir, subdir, '*.js'].join('/')
-                            src: path.join(rootdir, subdir, '*.js')
-                        };
+                                src: path.join(rootdir, subdir, '*.js')
+                            };
+                            concat[jobname + '_' + index].dest = destjs;
+                        }
 
-                        concat[jobname + '_' + index].dest = destjs;
                         uglify[jobname + '_' + index] = {
                             files: {}
                         };
                         uglify[jobname + '_' + index].files[destminjs] = [destjs];
                         index++;
+                    } else {
+                        destminjs = path.join(dest, dir.dest || '.', subdir + '.min.js');
                     }
-                    addLeaf(abspath, destminjs);
+                    mapping.addItem(abspath, destminjs);
                 } else {
                     copies.push(abspath);
                 }
