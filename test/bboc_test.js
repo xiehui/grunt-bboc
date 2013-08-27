@@ -47,11 +47,27 @@ exports.bboc = {
     },
     js_processor: function (test) {
         test.expect(1);
-        var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, [{
-            src: 'test/fixtures/project/lib/js',
-            dest: 'js/lib'
-        }], 'test/fixtures/project/dest');
+        var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, [
+            {
+                src: 'test/fixtures/project/lib/js',
+                dest: 'js/lib'
+            }
+        ], 'test/fixtures/project/dest');
         jsprocessor.process();
+        test.done();
+    },
+    html_processor: function (test) {
+        var mapper = require('../tasks/lib/srcdestmapper')();
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner.js', 'test/fixtures/project/js/lib/banner.min.js');
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner2.js', 'test/fixtures/project/js/lib/banner.min.js');
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner3.js', 'test/fixtures/project/js/lib/banner.min.js');
+        var htmlprocessor = require('../tasks/lib/htmlprocessor')(grunt, [
+            {
+                src: 'test/fixtures/project/src/html',
+                dest: 'html'
+            }
+        ], 'test/fixtures/project/dest', mapper);
+        htmlprocessor.process();
         test.done();
     }
 };
