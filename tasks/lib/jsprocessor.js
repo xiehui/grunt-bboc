@@ -69,6 +69,18 @@ module.exports = function (grunt, dirs, dest) {
                 }
             });
         });
+        grunt.initConfig({
+            concat:concat
+        });
+//        grunt.config('concat', concat);
+//        grunt.config('uglify', uglify);
+
+        grunt.loadNpmTasks('grunt-contrib-concat');
+        grunt.loadNpmTasks('grunt-contrib-uglify');
+
+//        grunt.registerTask('jsprocess', ['concat', 'uglify']);
+
+        grunt.task.run('concat');
     };
 
     exports.process = function () {
