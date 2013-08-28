@@ -10,23 +10,32 @@ module.exports = function(grunt, dirs, dest, mapper) {
     var copies = [];
     var exports = {};
 
+    var win32 = process.platform === 'win32';
+
+    // Normalize \\ paths to / paths.
+    var unixifyPath = function(filepath) {
+        if (win32) {
+            return filepath.replace(/\\/g, '/');
+        } else {
+            return filepath;
+        }
+    };
+
     var regexps = [{
         pattern: /<script.+src=['"]([^"']+)["']/gm,
-        filterOut: function(m) {
-           return m;
+        filterOut: function(srcfile, destpath) {
+           var destjs = mapper.getDestFile(srcfile);
+           return unixifyPath(path.relative(destpath, destjs));
         }
     }];
 
-    var parse = function(content) {
-//        var lines = content.replace(/\r\n/g,'\n').split(/\n/);
-//        lines.forEach(function(line) {
-//             regexps.forEach(function(reg) {
-//
-//             });
-//        });
+    var parse = function(content, srchtml, desthtml) {
+        var srcpath = path.dirname(srchtml);
+        var destpath = path.dirname(desthtml);
         regexps.forEach(function(reg) {
             content = content.replace(reg.pattern, function(match, src) {
-                var line = match.replace(reg.filterOut(src));
+                var srcfile = unixifyPath(path.relative(process.cwd(), path.resolve(srcpath, src)));
+                var line = match.replace(src, reg.filterOut(srcfile, destpath));
                 return line;
             });
         });
@@ -36,12 +45,12 @@ module.exports = function(grunt, dirs, dest, mapper) {
     exports.process = function() {
         dirs.forEach(function (dir) {
             grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
-                var content;
+                var content, desthtml = path.join(dest, dir.dest || '', subdir || '', filename);
                 if (path.extname(filename) == '.html') {
                     content = grunt.file.read(abspath);
-                    content = parse(content);
-                    grunt.file.write(path.join(dest, dir.dest || '.', subdir, filename), content);
-                    grunt.log.info('write html file : '+ path.join(dest, dir.dest || '.', subdir, filename));
+                    content = parse(content, abspath, desthtml);
+                    grunt.file.write(desthtml, content);
+                    grunt.log.writeln('write html file : '+ desthtml);
                 } else {
                     copies.push(abspath);
                 }

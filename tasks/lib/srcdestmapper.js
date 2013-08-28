@@ -6,7 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-module.exports = function () {
+module.exports = function (version) {
     var exports = {};
     var tree = {};
 
@@ -15,9 +15,9 @@ module.exports = function () {
         if (paths && paths.length > 0) {
             path = paths.shift();
             if (!rootNode.hasOwnProperty(path)) {
-                rootNode.path = {};
+                rootNode[path] = {};
             }
-            routeNode(rootNode.path, paths);
+            return routeNode(rootNode[path], paths);
         }
         return rootNode;
     };
@@ -27,10 +27,23 @@ module.exports = function () {
         var filename = paths.pop();
         var node = routeNode(tree, paths);
         if (node.hasOwnProperty(destfile)) {
-            node.destfile.push(filename);
+            node[destfile].push(filename);
         } else {
-            node.destfile = [filename];
+            node[destfile] = [filename];
         }
+    };
+
+    exports.getDestFile = function(srcfile) {
+        var paths = srcfile.split('/');
+        var filename = paths.pop();
+        var node = routeNode(tree, paths);
+        var destfile;
+        for (destfile in node) {
+            if (node[destfile].indexOf(filename) !== -1) {
+                break;
+            }
+        }
+        return destfile + '?v=' + version;
     };
 
     return exports;

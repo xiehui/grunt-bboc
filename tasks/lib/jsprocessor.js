@@ -11,7 +11,7 @@ module.exports = function (grunt, dirs, dest) {
     var copies = [];
     var concat = {};
     var uglify = {};
-    var mapping = require('./srcdestmapper')();
+    var mapping = require('./srcdestmapper')(grunt.template.today('yyyymmddhhMM'));
     var exports = {};
 
     var hasSubPath = function (dir) {
