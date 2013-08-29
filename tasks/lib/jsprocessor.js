@@ -9,8 +9,6 @@ var fs = require('fs');
 
 module.exports = function (grunt, dirs, dest) {
     var copies = [];
-//    var concat = {};
-//    var uglify = {};
     var mapping = require('./srcdestmapper')(grunt.template.today('yyyymmddhhMM'));
     var exports = {};
 
@@ -53,6 +51,7 @@ module.exports = function (grunt, dirs, dest) {
 //                                src: path.join(rootdir, subdir, '*.js')
 //                            };
 //                            concat[jobname + '_' + index].dest = destjs;
+
                             grunt.config('concat.' + jobname + '_' + index + '.src', path.join(rootdir, subdir, '*.js'));
                             grunt.config('concat.' + jobname + '_' + index + '.dest', destjs);
                         }
@@ -76,12 +75,12 @@ module.exports = function (grunt, dirs, dest) {
 //        grunt.config('concat', concat);
 //        grunt.config('uglify', uglify);
 
-//        grunt.loadNpmTasks('grunt-contrib-concat');
+
 //        grunt.loadNpmTasks('grunt-contrib-uglify');
 
 //        grunt.registerTask('jsprocess', ['concat', 'uglify']);
 
-        grunt.task.run('concat');
+//        grunt.task.run('concat');
     };
 
     exports.process = function () {
