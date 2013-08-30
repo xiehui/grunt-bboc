@@ -8,8 +8,8 @@ var path = require('path');
 var fs = require('fs');
 var util = require('./util')();
 
-module.exports = function (grunt, dirs, dest) {
-    var mapping = require('./srcdestmapper')();
+module.exports = function (grunt, dirs, dest, mapper) {
+
     var exports = {};
 
     var hasSubPath = function (dir) {
@@ -55,7 +55,7 @@ module.exports = function (grunt, dirs, dest) {
                     destfile = util.unixifyPath(path.join(dest, dir.dest || '', subdir || '', filename));
                     copies.push({src: [abspath], dest: path.dirname(copydestfile)});
                 }
-                mapping.addItem(abspath, destfile);
+                mapper.addItem(abspath, destfile);
 
             });
         });

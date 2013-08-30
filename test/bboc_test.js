@@ -48,12 +48,13 @@ exports.bboc = {
 //    },
     js_processor: function (test) {
 //        test.expect(1);
+        var mapper = require('../tasks/lib/srcdestmapper')();
         var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, [
             {
                 src: 'test/fixtures/project/lib/js',
                 dest: 'js/lib'
             }
-        ], 'test/fixtures/project/dest');
+        ], 'test/fixtures/project/dest', mapper);
         jsprocessor.process();
         grunt.log.writeln("concat property :" + grunt.config.get('concat'));
         test.done();

@@ -40,7 +40,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('bboc', 'building based on covention', function () {
         // Merge task-specific and/or target-specific options with these defaults.
-        var defaultoptions = {
+        var options = {
             js: {
                 dir: [
                     {
@@ -68,6 +68,14 @@ module.exports = function (grunt) {
         }
 
         grunt.config('copy.main.files', []);
+
+        var mapper = require('./lib/srcdestmapper')();
+
+        var jsprocessor = require('./lib/jsprocessor')(grunt, options.js.dir, options.dest, mapper);
+        jsprocessor.process();
+
+        var htmlprocessor = require('./lib/htmlprocessor')(grunt, options.html.dir, options.dest, mapper);
+        htmlprocessor.process();
 
         if (grunt.config('concat')) {
             grunt.loadNpmTasks('grunt-contrib-concat');
