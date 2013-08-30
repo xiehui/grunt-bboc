@@ -25,6 +25,7 @@ var grunt = require('grunt');
 exports.bboc = {
     setUp: function (done) {
         // setup here if necessary
+
         done();
     },
 //    default_options: function (test) {
@@ -54,10 +55,11 @@ exports.bboc = {
             }
         ], 'test/fixtures/project/dest');
         jsprocessor.process();
+        grunt.log.writeln("concat property :" + grunt.config.get('concat'));
         test.done();
     },
     html_processor: function (test) {
-        var mapper = require('../tasks/lib/srcdestmapper')(grunt.template.today('yyyymmddHHMM'));
+        var mapper = require('../tasks/lib/srcdestmapper')();
         mapper.addItem('test/fixtures/project/lib/js/banner/banner.js', 'test/fixtures/project/js/lib/banner.min.js');
         mapper.addItem('test/fixtures/project/lib/js/banner/banner2.js', 'test/fixtures/project/js/lib/banner.min.js');
         mapper.addItem('test/fixtures/project/lib/js/banner/banner3.js', 'test/fixtures/project/js/lib/banner.min.js');

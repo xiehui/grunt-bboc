@@ -51,7 +51,7 @@ module.exports = function(grunt) {
     // Unit tests.
     nodeunit: {
       tests: ['test/*_test.js']
-    },
+    }
 
 //      concat: {
 //          job_1 : {
@@ -71,8 +71,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-contrib-concat');
 
-    grunt.config('concat.job_1.src', 'test/fixtures/project/lib/js/banner/*.js');
-    grunt.config('concat.job_1.dest', 'dest/lib/js/banner.js');
+    grunt.config('concat.job_1.src', 'test\\fixtures\\project\\lib\\js\\banner\\*.js');
+    grunt.config('concat.job_1.dest', 'test\\fixtures\\project\\dest\\lib\\js\\banner.js');
     grunt.task.run('concat');
 
   // Whenever the 'test' task is run, first clean the 'tmp' dir, then run this

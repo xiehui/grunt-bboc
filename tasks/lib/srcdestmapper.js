@@ -6,7 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-module.exports = function (version) {
+module.exports = function () {
     var exports = {};
     var tree = {};
 
@@ -43,7 +43,7 @@ module.exports = function (version) {
                 break;
             }
         }
-        return destfile + '?v=' + version;
+        return destfile;
     };
 
     return exports;
