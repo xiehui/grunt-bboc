@@ -53,14 +53,9 @@ module.exports = function(grunt) {
       tests: ['test/*_test.js']
     }
 
-//      concat: {
-//          job_1 : {
-//              src: 'test/fixtures/project/lib/js/banner/*.js',
-//              dest : 'dest/lib/js/banner.js'
-//          }
-//      }
-
   });
+
+    grunt.option('stack', true);
 
   // Actually load this plugin's task(s).
   grunt.loadTasks('tasks');
@@ -70,10 +65,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-contrib-concat');
-
-    grunt.config('concat.job_1.src', 'test\\fixtures\\project\\lib\\js\\banner\\*.js');
-    grunt.config('concat.job_1.dest', 'test\\fixtures\\project\\dest\\lib\\js\\banner.js');
-    grunt.task.run('concat');
 
   // Whenever the 'test' task is run, first clean the 'tmp' dir, then run this
   // plugin's task(s), then test the result.

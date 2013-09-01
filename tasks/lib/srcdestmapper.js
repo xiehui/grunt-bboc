@@ -1,5 +1,4 @@
 /**
- * Created with JetBrains WebStorm.
  * User: Hui Xie
  * Date: 13-8-26
  * Time: 下午5:32
@@ -39,7 +38,7 @@ module.exports = function () {
         var node = routeNode(tree, paths);
         var destfile;
         for (destfile in node) {
-            if (node[destfile].indexOf(filename) !== -1) {
+            if (typeof node[destfile] == 'array' && node[destfile].indexOf(filename) !== -1) {
                 break;
             }
         }

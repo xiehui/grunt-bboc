@@ -7,22 +7,28 @@
 var path = require('path');
 var util = require('./util')();
 
-module.exports = function (grunt, dirs, dest, mapper) {
+module.exports = function (grunt, dest, mapper) {
     var exports = {};
 
-    var getReplaceFlie = function(srcfile, destpath) {
+    var getReplaceFlie = function (srcfile, destpath) {
         var replaceflie = mapper.getDestFile(srcfile);
-        return util.unixifyPath(path.relative(destpath, replaceflie));
+        if (replaceflie) {
+            return util.unixifyPath(path.relative(destpath, replaceflie));
+        }
+        return true;
     };
 
     var regexps = [
         {
-            pattern: /<script.+src=['"]([^"']+)["']/gm,
-            filterOut: function(srcfile, destpath, jsSet) {
+            pattern: /<script.+src=['"]([^"']+)["']*(?:\/>|>\s*<\/script>)/gm,
+            filterOut: function (srcfile, destpath, jsSet) {
                 var replacefile = getReplaceFlie(srcfile, destpath);
+                if (replacefile === true) {
+                    return true;
+                }
                 if (jsSet.indexOf(replacefile) === -1) {
                     jsSet.push(replacefile);
-                    return replacefile + '?ver=' + grunt.option('version');
+                    return replacefile + '?v=' + grunt.option('version');
                 }
                 return false;
             }
@@ -49,30 +55,26 @@ module.exports = function (grunt, dirs, dest, mapper) {
             content = content.replace(reg.pattern, function (match, src) {
                 var srcfile = util.unixifyPath(path.relative(process.cwd(), path.resolve(srcpath, src)));
                 var destfile = reg.filterOut(srcfile, destpath, jsSet);
-                return destfile ? match.replace(src, destfile) : '';
+                /**
+                 * destfile :
+                 *      undefined,true  no replace
+                 *      false           replace by ''
+                 *      string          replace by this string
+                 */
+                return (destfile === undefined || destfile === true) ? match : (destfile === false ? '' : match.replace(src, destfile));
             });
         });
         return content;
     };
 
-    exports.process = function () {
-        var copies = grunt.config('copy.main.files');
-        dirs.forEach(function (dir) {
-            grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
-                var content, destfile = util.unixifyPath(path.join(dest, dir.dest || '', subdir || '', filename));
-                if (path.extname(filename) === '.html') {
-                    content = grunt.file.read(abspath);
-                    content = parse(content, abspath, destfile);
-                    grunt.file.write(destfile, content);
-                    grunt.log.writeln('write html file : ' + destfile);
-                } else {
-                    copies.push({src: [abspath], dest: path.dirname(destfile)});
-
-                }
-                mapper.addItem(abspath, destfile);
-            });
-        });
-
+    exports.process = function (rootdir, subdir, filename, destpath) {
+        var srcfile = util.unixifyPath(path.join(rootdir, subdir || '', filename));
+        var content, destfile = util.unixifyPath(path.join(dest, destpath || '', subdir || '', filename));
+        content = grunt.file.read(srcfile);
+        content = parse(content, srcfile, destfile);
+        grunt.file.write(destfile, content);
+        grunt.log.writeln('write html file : ' + destfile);
     };
+
     return exports;
 };

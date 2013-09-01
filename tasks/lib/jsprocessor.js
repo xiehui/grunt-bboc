@@ -8,8 +8,10 @@ var path = require('path');
 var fs = require('fs');
 var util = require('./util')();
 
-module.exports = function (grunt, dirs, dest, mapper) {
+module.exports = function (grunt, dest, mapper) {
 
+    var presdirs = [];
+    var index = 0;
     var exports = {};
 
     var hasSubPath = function (dir) {
@@ -21,49 +23,31 @@ module.exports = function (grunt, dirs, dest, mapper) {
         return false;
     };
 
-    var parse = function () {
-        var presdirs = [];
-        var index = 0, copies = grunt.config('copy.main.files');
-        dirs.forEach(function (dir) {
-            grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
-                var jobname, destjs, destfile, uglify;
-                if (path.extname(filename) == '.js') {
+    exports.process = function (rootdir, subdir, filename, destpath) {
+        var jobname, destjs, destfile, uglify, srcpath = [rootdir, subdir || ''].join('/');
+        if (presdirs.indexOf(srcpath) === -1) {
+            if (hasSubPath([rootdir, subdir || ''].join('/'))) {
+                jobname = path.basename(filename, '.js');
+                destjs = [srcpath, filename].join('/');
+                destfile = util.unixifyPath(path.join(dest, destpath || '', subdir || '', jobname + '.min.js'));
+            } else {
+                presdirs.push(srcpath);
+                jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
+                destjs = util.unixifyPath(path.join(dest, destpath || '', subdir + '.js'));
+                destfile = util.unixifyPath(path.join(dest, destpath || '', subdir + '.min.js'));
 
-                    if (presdirs.indexOf(subdir) === -1) {
-                        if (hasSubPath([rootdir, subdir || ''].join('/'))) {
-                            jobname = path.basename(filename, '.js');
-                            destjs = abspath;
-                            destfile = util.unixifyPath(path.join(dest, dir.dest || '.', subdir, jobname + '.min.js'));
-                        } else {
-                            presdirs.push(subdir);
-                            jobname = subdir.substr(subdir.lastIndexOf('/') + 1);
-                            destjs = util.unixifyPath(path.join(dest, dir.dest || '.', subdir + '.js'));
-                            destfile = util.unixifyPath(path.join(dest, dir.dest || '.', subdir + '.min.js'));
+                grunt.config('concat.' + jobname + '_' + index + '.src', util.unixifyPath(path.join(srcpath, '*.js')));
+                grunt.config('concat.' + jobname + '_' + index + '.dest', destjs);
+            }
 
-                            grunt.config('concat.' + jobname + '_' + index + '.src', util.unixifyPath(path.join(rootdir, subdir, '*.js')));
-                            grunt.config('concat.' + jobname + '_' + index + '.dest', destjs);
-                        }
-
-                        uglify = {};
-                        uglify[destfile] = [destjs];
-                        grunt.config('uglify.' + jobname + '_' + index + '.files', uglify);
-                        index++;
-                    } else {
-                        destfile = util.unixifyPath(path.join(dest, dir.dest || '.', subdir + '.min.js'));
-                    }
-                } else {
-                    destfile = util.unixifyPath(path.join(dest, dir.dest || '', subdir || '', filename));
-                    copies.push({src: [abspath], dest: path.dirname(copydestfile)});
-                }
-                mapper.addItem(abspath, destfile);
-
-            });
-        });
-
-    };
-
-    exports.process = function () {
-        parse();
+            uglify = {};
+            uglify[destfile] = [destjs];
+            grunt.config('uglify.' + jobname + '_' + index + '.files', uglify);
+            index++;
+        } else {
+            destfile = util.unixifyPath(path.join(dest, destpath || '', subdir + '.min.js'));
+        }
+        mapper.addItem([srcpath, filename].join('/'), destfile);
     };
 
     return exports;

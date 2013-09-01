@@ -34,49 +34,84 @@
 'use strict';
 
 module.exports = function (grunt) {
-
+    var path = require('path');
+    var util = require('./lib/util')();
     // Please see the Grunt documentation for more information regarding task
     // creation: http://gruntjs.com/creating-tasks
 
     grunt.registerTask('bboc', 'building based on covention', function () {
         // Merge task-specific and/or target-specific options with these defaults.
-        var options = {
-            js: {
-                dir: [
-                    {
-                        src: 'lib/js'
-                    },
-                    {
-                        src: 'src/js',
-                        dest: 'js'
-                    }
-                ]
-            },
-            html: {
-                dir: [
-                    {
-                        src: 'src/html',
-                        dest: 'html'
-                    }
-                ]
-            },
+        var options = this.options({
+            dir: [
+                {
+                    src: 'lib',
+                    dest: 'lib'
+                },
+                {
+                    src: 'src',
+                    dest: ''
+                }
+            ],
             dest: 'dest'
-        };
+        });
 
-        if (grunt.option('version')) {
+        if (!(grunt.option('version'))) {
             grunt.option('version', grunt.template.today('yyyymmddHHMM'));
         }
 
-        grunt.config('copy.main.files', []);
+        var isExtend = function(abspath) {
+            var extendpatterns = options.extend || [];
+            var len = extendpatterns.length, i;
+            for (i = 0; i < len; i++) {
+                if(grunt.file.isMatch(extendpatterns[i], abspath))
+                    return true;
+            }
+            return false;
+        };
+
+        // collect file map
+        var filemap = {
+            js : [],
+            html : [],
+            other : []
+        };
+        options.dir.forEach(function(dir) {
+            grunt.file.recurse(dir.src, function (abspath, rootdir, subdir, filename) {
+                if(isExtend(abspath)) return;
+                var extname = path.extname(filename);
+                if(extname === '.js') {
+                    filemap.js.push({
+                        rootpath: rootdir,
+                        subpath: subdir,
+                        name: filename,
+                        subdest: dir.dest || ''
+                    });
+                } else if (extname === '.html') {
+                    filemap.html.push({
+                        rootpath: rootdir,
+                        subpath: subdir,
+                        name: filename,
+                        subdest: dir.dest || ''
+                    });
+                } else {
+                    filemap.other.push({
+                        rootpath: rootdir,
+                        subpath: subdir,
+                        name: filename,
+                        subdest: dir.dest || ''
+                    });
+                }
+            });
+        });
 
         var mapper = require('./lib/srcdestmapper')();
 
-        var jsprocessor = require('./lib/jsprocessor')(grunt, options.js.dir, options.dest, mapper);
-        jsprocessor.process();
+        // process js files
+        var jsprocessor = require('./lib/jsprocessor')(grunt, options.dest, mapper);
 
-        var htmlprocessor = require('./lib/htmlprocessor')(grunt, options.html.dir, options.dest, mapper);
-        htmlprocessor.process();
-
+        filemap.js.forEach(function(f) {
+            jsprocessor.process(f.rootpath, f.subpath, f.name, f.subdest);
+        });
         if (grunt.config('concat')) {
             grunt.loadNpmTasks('grunt-contrib-concat');
             grunt.task.run('concat');
@@ -85,10 +120,26 @@ module.exports = function (grunt) {
             grunt.loadNpmTasks('grunt-contrib-uglify');
             grunt.task.run('uglify');
         }
+
+        // process other file to copy
+        var copies = [];
+        filemap.other.forEach(function(f) {
+            var srcfile = util.unixifyPath(path.join(f.rootpath, f.subpath, f.name));
+            var destfile = util.unixifyPath(path.join(options.dest, f.subdest, f.subpath, f.name));
+            copies.push({src: [srcfile], dest: destfile});
+            mapper.addItem(srcfile, destfile);
+        });
+        grunt.config('copy.main.files', copies);
         if (grunt.config('copy')) {
             grunt.loadNpmTasks('grunt-contrib-copy');
             grunt.task.run('copy');
         }
+
+        //process html files
+        var htmlprocessor = require('./lib/htmlprocessor')(grunt, options.dest, mapper);
+        filemap.html.forEach(function(f) {
+            htmlprocessor.process(f.rootpath, f.subpath, f.name, f.subdest);
+        });
 
     });
 

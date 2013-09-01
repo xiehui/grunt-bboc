@@ -25,7 +25,7 @@ var grunt = require('grunt');
 exports.bboc = {
     setUp: function (done) {
         // setup here if necessary
-
+        grunt.option('version', grunt.template.today('yymmddHHMM'));
         done();
     },
 //    default_options: function (test) {
@@ -47,30 +47,30 @@ exports.bboc = {
 //        test.done();
 //    },
     js_processor: function (test) {
-//        test.expect(1);
+        test.expect(2);
         var mapper = require('../tasks/lib/srcdestmapper')();
-        var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, [
-            {
-                src: 'test/fixtures/project/lib/js',
-                dest: 'js/lib'
-            }
-        ], 'test/fixtures/project/dest', mapper);
-        jsprocessor.process();
+        var jsprocessor = require('../tasks/lib/jsprocessor')(grunt, 'test/fixtures/project/dest', mapper);
+        jsprocessor.process('test/fixtures/project/lib', 'js/banner', 'banner.js', 'lib');
+        jsprocessor.process('test/fixtures/project/lib', 'js/banner', 'banner2.js', 'lib');
+        jsprocessor.process('test/fixtures/project/lib', 'js/banner', 'banner3.js', 'lib');
         grunt.log.writeln("concat property :" + grunt.config.get('concat'));
+        test.deepEqual(grunt.config('concat.banner_0'), {
+            src: 'test/fixtures/project/lib/js/banner/*.js',
+            dest: 'test/fixtures/project/dest/lib/js/banner.js'
+        }, 'concat is ok');
+        test.deepEqual(grunt.config('uglify.banner_0.files'), {
+            'test/fixtures/project/dest/lib/js/banner.min.js': ['test/fixtures/project/dest/lib/js/banner.js']
+        }, 'uglify is ok');
         test.done();
     },
     html_processor: function (test) {
+//        test.expect(1);
         var mapper = require('../tasks/lib/srcdestmapper')();
-        mapper.addItem('test/fixtures/project/lib/js/banner/banner.js', 'test/fixtures/project/js/lib/banner.min.js');
-        mapper.addItem('test/fixtures/project/lib/js/banner/banner2.js', 'test/fixtures/project/js/lib/banner.min.js');
-        mapper.addItem('test/fixtures/project/lib/js/banner/banner3.js', 'test/fixtures/project/js/lib/banner.min.js');
-        var htmlprocessor = require('../tasks/lib/htmlprocessor')(grunt, [
-            {
-                src: 'test/fixtures/project/src/html',
-                dest: 'html'
-            }
-        ], 'test/fixtures/project/dest', mapper);
-        htmlprocessor.process();
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner.js', 'test/fixtures/project/dest/lib/js/banner.min.js');
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner2.js', 'test/fixtures/project/dest/lib/js/banner.min.js');
+        mapper.addItem('test/fixtures/project/lib/js/banner/banner3.js', 'test/fixtures/project/dest/lib/js/banner.min.js');
+        var htmlprocessor = require('../tasks/lib/htmlprocessor')(grunt, 'test/fixtures/project/dest', mapper);
+        htmlprocessor.process('test/fixtures/project/src', 'html', 'bboc.html', '');
         test.done();
     }
 };
