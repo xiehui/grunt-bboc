@@ -20,6 +20,70 @@ grunt.loadNpmTasks('grunt-bboc');
 ## The "bboc" task
 
 ### Overview
+基于约定构建项目，即项目结构按约定组织，则可以保证开发场景和线上场景的项目相对独立，开发使用更易于阅读调试的项目结构，发布则是经过合并、混淆、压缩、打上版本戳的
+得到优化适合线上项目。
+
+约定的项目结构：
+```
+|-lib
+   |-js
+      |-banner
+	     |-A.js
+	     |-B.js
+	    |-alone.js
+   |-css
+|-src
+   |-js
+   |-css
+   |-html
+	   |-example.html
+```
+构建后用于发布的项目结构：
+```
+dest
+  |-lib	   
+     |-js
+	    |-banner.min.js
+	    |-alone.min.js
+  |-html
+     |-example.html
+```
+
+#### js构建规则
+1、目录（lib/js）下有js文件(alone.js),且该目录含有子目录（lib/js/banner）;则这一级目录的js文件将被独立的压缩（alone.min.js）
+2、目录（lib/js/banner）下有js文件,且该目录不包含子目录；则这一级目录下的js文件将被合并压缩成一个文件，文件名取目录名（banner.min.js）
+
+#### html替换规则
+1、<script>,<img>,<a>,<link>等引用文件会自动替换为项目构建后的相关资源文件路径，如js，css，png等
+2、对于<script>替换，会自动合并多个重复的引用，并添加当前构建的版本戳
+如下，原html文件：
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="../../lib/js/banner/A.js"></script>
+    <script src="../../lib/js/alone.js"></script>
+    <script src="../../lib/js/banner/B.js"></script>
+</head>
+<body>
+
+</body>
+```
+构建后生成的html文件：
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="../lib/js/banner.min.js?v=201308301118"></script>
+    <script src="../lib/js/alone.min.js?v=201308301118"></script>
+</head>
+<body>
+
+</body>
+```
+
 In your project's Gruntfile, add a section named `bboc` to the data object passed into `grunt.initConfig()`.
 
 ```js
